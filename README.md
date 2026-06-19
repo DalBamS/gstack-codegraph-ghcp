@@ -117,6 +117,15 @@ gh auth status
 
 이 명령은 GitHub 이슈를 만들기 전에 사양 문서의 필수 섹션, 민감 정보 패턴, 중복 이슈 검색 명령, `gh issue create` 미리보기를 확인합니다. 실제 이슈 생성은 사용자 승인 후 preview된 명령으로 실행합니다.
 
+### Ship dry-run
+
+```bash
+./scripts/ship-workflow.sh --pr 123 --issue 42
+./scripts/ship-workflow.sh --pr 123 --issue 42 --run-checks
+```
+
+이 명령은 PR 상태와 체크 확인 명령, 안전 게이트, `gh pr merge`, `gh issue close` preview를 출력합니다. 실제 merge와 issue close는 사용자 승인 후에만 실행합니다.
+
 ### Copilot 변환본 구조 검증
 
 ```bash
@@ -186,6 +195,7 @@ scripts/
 ├── merge-worktree.sh       # worktree 브랜치 병합 및 정리
 ├── qa-score.sh             # 0-100 QA 점수 계산
 ├── qa-workflow.sh          # QA 점수와 출시 판단 리포트 생성
+├── ship-workflow.sh        # PR merge/issue close 안전 dry-run
 ├── spec-workflow.sh        # 사양 품질 게이트와 이슈 생성 dry-run
 └── validate-ghcp.sh        # Copilot 변환본 구조 검증
 ```

@@ -233,7 +233,31 @@ Prune 프롬프트:
 - `.github/memory/patterns.md`
 - `.github/memory/backlog.md`
 
-## 9. /ship PR Dry Run
+## 9. Ship Workflow Dry Run 실행
+
+목적: 실제 merge 없이 PR 상태 확인 명령, 안전 게이트, merge/issue close preview를 출력하는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/ship-workflow.sh --pr 123 --issue 42
+```
+
+기대 결과:
+
+- `CHECK OK` 출력
+- `gh pr view 123 ...` preview 출력
+- `gh pr checks 123` preview 출력
+- `gh pr merge 123 --merge --delete-branch` preview 출력
+- `gh issue close 42 ...` preview 출력
+- 실제 GitHub merge/close 실행 없음
+
+실패 시 확인할 파일:
+
+- `scripts/ship-workflow.sh`
+- `.github/skills/ship/SKILL.md`
+
+## 10. /ship PR Dry Run
 
 목적: PR 머지와 이슈 종료가 사용자 승인 게이트 뒤에 있는지 확인합니다.
 
