@@ -99,6 +99,16 @@ gh auth status
 
 테스트, 린트, 빌드 도구가 아직 없어도 스크립트는 실패하지 않고 가능한 신호로 점수와 개선 항목을 출력합니다.
 
+### QA 워크플로우 리포트
+
+```bash
+./scripts/qa-workflow.sh .
+./scripts/qa-workflow.sh . --report /tmp/gstack-ghcp-qa.md
+./scripts/qa-workflow.sh https://example.com
+```
+
+코드 경로를 입력하면 `qa-score.sh` 결과를 테스트 계획과 출시 판단으로 묶어 출력합니다. URL을 입력하면 Playwright MCP로 실행해야 할 브라우저 검증 계획을 출력합니다.
+
 ### Copilot 변환본 구조 검증
 
 ```bash
@@ -167,6 +177,7 @@ scripts/
 ├── parallel-work.sh        # 여러 Git worktree 생성
 ├── merge-worktree.sh       # worktree 브랜치 병합 및 정리
 ├── qa-score.sh             # 0-100 QA 점수 계산
+├── qa-workflow.sh          # QA 점수와 출시 판단 리포트 생성
 └── validate-ghcp.sh        # Copilot 변환본 구조 검증
 ```
 

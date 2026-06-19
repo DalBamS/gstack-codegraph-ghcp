@@ -48,7 +48,42 @@ CHECK OK
 - `scripts/qa-score.sh`
 - `README.md`
 
-## 3. /spec Dry Run
+## 3. QA Workflow Report 실행
+
+목적: 코드 경로를 대상으로 테스트 계획, QA Score 원문, 출시 판단이 하나의 리포트로 묶이는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/qa-workflow.sh .
+```
+
+리포트 파일 생성 확인:
+
+```bash
+./scripts/qa-workflow.sh . --report /tmp/gstack-ghcp-qa.md
+test -s /tmp/gstack-ghcp-qa.md
+```
+
+URL 계획 확인:
+
+```bash
+./scripts/qa-workflow.sh https://example.com
+```
+
+기대 결과:
+
+- `# QA Workflow Report` 출력
+- 코드 경로 입력 시 `QA Score Output`과 `Release Decision` 출력
+- URL 입력 시 Playwright MCP browser smoke checklist 출력
+- URL 입력 시 별도 브라우저 하니스 코드 생성 없음
+
+실패 시 확인할 파일:
+
+- `scripts/qa-workflow.sh`
+- `.github/skills/qa/SKILL.md`
+
+## 4. /spec Dry Run
 
 목적: 모호한 기능 요청을 이슈 생성 전 검토 가능한 사양으로 바꾸는지 확인합니다.
 
@@ -71,7 +106,7 @@ CHECK OK
 
 - `.github/skills/spec/SKILL.md`
 
-## 4. /qa 코드 경로 실행
+## 5. /qa 코드 경로 실행
 
 목적: 코드 경로 또는 repo root를 대상으로 테스트 계획과 QA 점수를 연결하는지 확인합니다.
 
@@ -85,15 +120,16 @@ CHECK OK
 
 - 검증 범위 확인
 - 테스트 계획 출력
-- `./scripts/qa-score.sh .` 실행 또는 실행 전 확인
+- `./scripts/qa-workflow.sh .` 실행 또는 실행 전 확인
 - QA Score와 출시 판단 출력
 
 실패 시 확인할 파일:
 
 - `.github/skills/qa/SKILL.md`
 - `scripts/qa-score.sh`
+- `scripts/qa-workflow.sh`
 
-## 5. Playwright MCP Smoke Test
+## 6. Playwright MCP Smoke Test
 
 목적: 브라우저 검증이 bespoke browser harness가 아니라 Playwright MCP로 수행되는지 확인합니다.
 
@@ -114,7 +150,7 @@ Playwright MCP로 https://example.com 을 열고 title을 확인해줘.
 - `.vscode/mcp.json`
 - `.github/skills/qa/SKILL.md`
 
-## 6. /memory 저장, 검색, Prune Dry Run
+## 7. /memory 저장, 검색, Prune Dry Run
 
 목적: 결정, 패턴, 남은 작업을 `.github/memory/` 아래에 저장하고 정리 전 승인을 받는지 확인합니다.
 
@@ -150,7 +186,7 @@ Prune 프롬프트:
 - `.github/memory/patterns.md`
 - `.github/memory/backlog.md`
 
-## 7. /ship PR Dry Run
+## 8. /ship PR Dry Run
 
 목적: PR 머지와 이슈 종료가 사용자 승인 게이트 뒤에 있는지 확인합니다.
 
