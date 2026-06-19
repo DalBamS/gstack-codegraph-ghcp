@@ -190,14 +190,105 @@ Playwright MCP로 https://example.com 을 열고 title을 확인해줘.
 
 - `.vscode/mcp.json`의 `servers.playwright` 사용
 - 페이지 title이 `Example Domain`으로 확인됨
+- visible page state 또는 accessibility snapshot 확인
+- 필요 시 screenshot 수집 가능 여부 확인
 - 별도 브라우저 하니스 코드 생성 없음
+- `$B`, `browse/dist/browse`, persistent Chromium daemon을 사용하지 않음
 
 실패 시 확인할 파일:
 
 - `.vscode/mcp.json`
 - `.github/skills/qa/SKILL.md`
 
-## 8. /memory 저장, 검색, Prune Dry Run
+## 8. Review Workflow 실행
+
+목적: diff 기반 review report가 변경 파일, whitespace, 위험 패턴, 테스트 공백을 출력하는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/review-workflow.sh --base HEAD --target HEAD
+./scripts/review-workflow.sh --base HEAD --target HEAD --report /tmp/gstack-review.md
+test -s /tmp/gstack-review.md
+```
+
+기대 결과:
+
+- `# Review Workflow Report` 출력
+- changed files, whitespace check, risk scan, test gap 섹션 출력
+- 변경이 없어도 성공
+
+실패 시 확인할 파일:
+
+- `scripts/review-workflow.sh`
+- `.github/skills/review/SKILL.md`
+
+## 9. /review Dry Run
+
+목적: Copilot `/review` 스킬이 실제 mutation 없이 review workflow로 연결되는지 확인합니다.
+
+프롬프트:
+
+```text
+/review 현재 브랜치
+```
+
+기대 결과:
+
+- base/target ref 확인
+- `./scripts/review-workflow.sh --base origin/main --target HEAD` 실행 또는 preview
+- findings가 있으면 severity와 근거를 먼저 표시
+- merge/push/close 같은 mutation 없음
+
+실패 시 확인할 파일:
+
+- `.github/skills/review/SKILL.md`
+
+## 10. Investigate Workflow 실행
+
+목적: 원인 조사 리포트가 재현, 최소화, 가설, 계측, 회귀 검증 순서로 출력되는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/investigate-workflow.sh --symptom "workflow smoke test" --target .
+./scripts/investigate-workflow.sh --symptom "workflow smoke test" --target . --report /tmp/gstack-investigate.md
+test -s /tmp/gstack-investigate.md
+```
+
+기대 결과:
+
+- `# Investigate Workflow Report` 출력
+- reproduce, minimize, current signals, hypotheses, instrumentation, regression gate 섹션 출력
+- `--command`만 주면 preview만 출력하고 실행하지 않음
+
+실패 시 확인할 파일:
+
+- `scripts/investigate-workflow.sh`
+- `.github/skills/investigate/SKILL.md`
+
+## 11. /investigate Dry Run
+
+목적: Copilot `/investigate` 스킬이 원인 없이 바로 수정하지 않고 조사 루프로 들어가는지 확인합니다.
+
+프롬프트:
+
+```text
+/investigate "validate-ghcp가 실패함"
+```
+
+기대 결과:
+
+- 증상과 target path 확인
+- 재현 명령이 있으면 승인 전 preview만 출력
+- root cause 전 수정 금지
+- 마지막에 `qa-workflow.sh` 회귀 검증 계획 제시
+
+실패 시 확인할 파일:
+
+- `.github/skills/investigate/SKILL.md`
+
+## 12. /memory 저장, 검색, Prune Dry Run
 
 목적: 결정, 패턴, 남은 작업을 `.github/memory/` 아래에 저장하고 정리 전 승인을 받는지 확인합니다.
 
@@ -233,7 +324,7 @@ Prune 프롬프트:
 - `.github/memory/patterns.md`
 - `.github/memory/backlog.md`
 
-## 9. Memory Workflow Dry Run 실행
+## 13. Memory Workflow Dry Run 실행
 
 목적: 저장 전 중복 검색과 secret 검사를 수행하고, 승인 전에는 파일을 수정하지 않는지 확인합니다.
 
@@ -261,7 +352,7 @@ Prune 프롬프트:
 - `scripts/memory-workflow.sh`
 - `.github/skills/memory/SKILL.md`
 
-## 10. Ship Workflow Dry Run 실행
+## 14. Ship Workflow Dry Run 실행
 
 목적: 실제 merge 없이 PR 상태 확인 명령, 안전 게이트, merge/issue close preview를 출력하는지 확인합니다.
 
@@ -285,7 +376,7 @@ Prune 프롬프트:
 - `scripts/ship-workflow.sh`
 - `.github/skills/ship/SKILL.md`
 
-## 11. /ship PR Dry Run
+## 15. /ship PR Dry Run
 
 목적: PR 머지와 이슈 종료가 사용자 승인 게이트 뒤에 있는지 확인합니다.
 

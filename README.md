@@ -2,10 +2,12 @@
 
 gstack-ghcp는 gstack(GitHub Stack)의 역할 기반 에이전트 운영 방식을 GitHub Copilot 환경에 맞게 옮긴 프로젝트입니다. 브라우저 자동화 하니스는 직접 구현하지 않고, VS Code의 MCP 설정을 통해 Microsoft Playwright MCP를 연결합니다.
 
+이 저장소는 원본 `garrytan/gstack`의 전체 기능을 복제한 프로젝트가 아니라, GitHub Copilot에서 반복 실행하기 좋은 핵심 워크플로우를 추출한 실행형 subset입니다. 원본 gstack의 persistent Chromium daemon, browser CLI, telemetry/update/checkpoint/gbrain 계층은 의도적으로 포함하지 않습니다.
+
 이 저장소는 다음 세 가지를 제공합니다.
 
 - 역할 에이전트: 전략, 설계, 엔지니어링, 릴리스, 문서, QA 역할을 나눈 `.agent.md` 파일
-- 공유 스킬: `/spec`, `/ship`, `/qa`, `/memory` 작업 패턴
+- 공유 스킬: `/spec`, `/qa`, `/review`, `/investigate`, `/ship`, `/memory` 작업 패턴
 - 자동화 스크립트: Git worktree 병렬 작업과 QA 점수 계산
 
 ## 설치 방법
@@ -76,6 +78,8 @@ gh auth status
 | `/spec` | `.github/skills/spec/SKILL.md` | 모호한 요청을 5단계로 사양화하고 GitHub 이슈 생성 |
 | `/ship` | `.github/skills/ship/SKILL.md` | 머지 전 체크리스트, PR 머지, 연결 이슈 종료 |
 | `/qa` | `.github/skills/qa/SKILL.md` | 테스트 계획, Playwright MCP 브라우저 검증, QA 점수 계산 |
+| `/review` | `.github/skills/review/SKILL.md` | diff 기반 위험 패턴, 테스트 공백, 출시 전 리뷰 |
+| `/investigate` | `.github/skills/investigate/SKILL.md` | 재현, 최소화, 가설, 계측, 회귀 검증 중심 원인 조사 |
 | `/memory` | `.github/skills/memory/SKILL.md` | 결정, 패턴, 남은 작업을 `.github/memory/`에 저장하고 다음 세션에서 불러오기 |
 
 ## 스크립트 사용법
@@ -125,6 +129,24 @@ gh auth status
 ```
 
 이 명령은 PR 상태와 체크 확인 명령, 안전 게이트, `gh pr merge`, `gh issue close` preview를 출력합니다. 실제 merge와 issue close는 사용자 승인 후에만 실행합니다.
+
+### Review workflow
+
+```bash
+./scripts/review-workflow.sh --base origin/main --target HEAD
+./scripts/review-workflow.sh --base HEAD --target HEAD --report /tmp/gstack-review.md
+```
+
+이 명령은 diff 파일 목록, whitespace check, secret/shell/SQL/browser 위험 패턴, 테스트 공백을 확인합니다. 위험 패턴은 자동 수정하지 않고 리뷰 단서로 출력합니다.
+
+### Investigate workflow
+
+```bash
+./scripts/investigate-workflow.sh --symptom "validate-ghcp fails" --target .
+./scripts/investigate-workflow.sh --symptom "login returns 500" --target src/auth --command "npm test -- auth"
+```
+
+이 명령은 증상을 재현, 최소화, 가설, 계측, 수정, 회귀 검증 단계로 정리합니다. 재현 명령은 기본 preview이며 사용자 승인 후 `--run-command`로만 실행합니다.
 
 ### Memory dry-run
 
@@ -193,7 +215,7 @@ BASE_BRANCH=develop ./scripts/merge-worktree.sh feature-auth
 ```text
 .github/
 ├── agents/                 # 6개 역할 에이전트
-├── skills/                 # spec, ship, qa, memory 스킬
+├── skills/                 # spec, qa, review, investigate, ship, memory 스킬
 └── copilot-instructions.md # Copilot 프로젝트 지침
 .vscode/
 └── mcp.json                # Playwright MCP 설정
@@ -206,6 +228,8 @@ scripts/
 ├── memory-workflow.sh      # memory 저장/검색/prune dry-run
 ├── qa-score.sh             # 0-100 QA 점수 계산
 ├── qa-workflow.sh          # QA 점수와 출시 판단 리포트 생성
+├── review-workflow.sh      # diff 기반 리뷰 리포트 생성
+├── investigate-workflow.sh # 원인 조사 리포트 생성
 ├── ship-workflow.sh        # PR merge/issue close 안전 dry-run
 ├── spec-workflow.sh        # 사양 품질 게이트와 이슈 생성 dry-run
 └── validate-ghcp.sh        # Copilot 변환본 구조 검증
@@ -214,7 +238,22 @@ scripts/
 ## 운영 원칙
 
 - 브라우저 작업은 Playwright MCP로 처리하고 별도 브라우저 하니스를 구현하지 않습니다.
+- 원본 gstack의 browser daemon, `$B` CLI, `/browse`, `/scrape`, `/skillify`는 재구현하지 않습니다.
+- URL smoke test는 Playwright MCP로 title, visible state, accessibility snapshot, screenshot 필요 여부를 확인합니다.
 - GitHub 작업은 `gh` CLI를 사용하되 실행 전 사용자 확인을 받습니다.
 - 스킬은 반드시 폴더+`SKILL.md` 구조로 유지합니다.
 - 에이전트와 스킬 frontmatter는 간단하고 명확하게 유지합니다.
 - 자동화 스크립트는 순수 Git과 셸 스크립트만 사용합니다.
+
+## CI 검증
+
+GitHub Actions는 `.github/workflows/validate.yml`에서 다음 smoke test를 실행합니다.
+
+- `./scripts/validate-ghcp.sh`
+- `./scripts/qa-score.sh .`
+- `./scripts/qa-workflow.sh .`
+- `./scripts/spec-workflow.sh` dry-run
+- `./scripts/review-workflow.sh` smoke
+- `./scripts/investigate-workflow.sh` smoke
+- `./scripts/ship-workflow.sh` dry-run
+- `./scripts/memory-workflow.sh` dry-run

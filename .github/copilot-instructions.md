@@ -9,8 +9,9 @@
 - **브라우저 하니스 제외**: gstack의 자체(bespoke) 브라우저 하니스는 재구현하지 않습니다.
 - **Playwright MCP 대체**: 브라우저 기능(E2E 테스트, UI 검증, 스크린샷 등)은 **Microsoft Playwright MCP**로 대체하고 통합합니다.
 - **역할 기반 에이전트**: CEO, Designer, Eng Manager, Release Manager, Doc Engineer, QA 등 6가지 역할 에이전트가 협력합니다.
-- **공유 스킬 시스템**: `/spec`, `/ship`, `/qa`, `/memory` 4가지 스킬로 반복 가능한 작업 패턴을 정의합니다.
-- **자동화 스크립트**: Git 워크트리 병렬화 + QA 스코어링(0-100) 자동 계산.
+- **공유 스킬 시스템**: `/spec`, `/qa`, `/review`, `/investigate`, `/ship`, `/memory` 6가지 스킬로 반복 가능한 작업 패턴을 정의합니다.
+- **자동화 스크립트**: Git 워크트리 병렬화, QA 스코어링(0-100), spec/review/investigate/ship/memory dry-run 검증.
+- **범위 제한**: 원본 gstack의 persistent Chromium daemon, `$B` CLI, telemetry/update/checkpoint/gbrain 계층은 재구현하지 않습니다.
 
 ---
 
@@ -28,10 +29,14 @@
 ├── skills/                  # 공유 스킬 (에이전트가 공통 사용)
 │   ├── spec/
 │   │   └── SKILL.md         # 사양 문서 작성 워크플로우
-│   ├── ship/
-│   │   └── SKILL.md         # 기능 출시 체크리스트
 │   ├── qa/
 │   │   └── SKILL.md         # QA 계획 + 테스트 자동화 (Playwright MCP 포함)
+│   ├── review/
+│   │   └── SKILL.md         # diff 기반 위험/테스트 공백 리뷰
+│   ├── investigate/
+│   │   └── SKILL.md         # 재현→최소화→가설→계측 원인 조사
+│   ├── ship/
+│   │   └── SKILL.md         # 기능 출시 체크리스트
 │   └── memory/
 │       └── SKILL.md         # 에이전트 메모리·학습 저장
 ├── memory/                  # 조직 지식베이스 (마크다운)
@@ -44,7 +49,17 @@ scripts/                      # 자동화 스크립트
 ├── setup-worktree.sh        # Git 워크트리 생성
 ├── parallel-work.sh         # 여러 기능 병렬 개발
 ├── qa-score.sh              # QA 점수 계산 (0-100)
+├── qa-workflow.sh           # QA 리포트와 출시 판단
+├── spec-workflow.sh         # 사양 품질 게이트와 이슈 생성 dry-run
+├── review-workflow.sh       # diff 기반 리뷰 리포트
+├── investigate-workflow.sh  # 원인 조사 리포트
+├── ship-workflow.sh         # PR merge/issue close dry-run
+├── memory-workflow.sh       # memory 저장/검색/prune dry-run
+├── validate-ghcp.sh         # Copilot 변환본 구조 검증
 └── merge-worktree.sh        # 워크트리 병합 및 정리
+
+.github/workflows/
+└── validate.yml             # GitHub Actions smoke validation
 
 .vscode/
 └── mcp.json                 # MCP 서버 설정 (Playwright 연결)
@@ -98,6 +113,10 @@ worktrees/                   # 로컬 전용 (커밋 제외)
    ↓
    코드 구현 (엔지니어)
    ↓
+  /review 스킬 실행 (Eng Manager)
+  ↓
+  버그가 있으면 /investigate 스킬 실행
+  ↓
    /qa 스킬 실행 (QA)
    ↓
    Playwright MCP가 자동으로 테스트 케이스 생성 + 실행
@@ -163,9 +182,11 @@ worktrees/                   # 로컬 전용 (커밋 제외)
 
 ### Phase 2: 스킬 시스템 (2-3주)
 1. `/spec` 스킬 작성 → 검토
-2. `/ship` 스킬 작성 → 검토
-3. `/qa` 스킬 작성 (Playwright MCP 포함) → 검토
-4. `/memory` 스킬 작성 → 검토
+2. `/qa` 스킬 작성 (Playwright MCP 포함) → 검토
+3. `/review` 스킬 작성 → 검토
+4. `/investigate` 스킬 작성 → 검토
+5. `/ship` 스킬 작성 → 검토
+6. `/memory` 스킬 작성 → 검토
 
 ### Phase 3: Playwright MCP 연결 (1주)
 1. `.vscode/mcp.json` 작성 및 테스트 → 검토
@@ -174,7 +195,14 @@ worktrees/                   # 로컬 전용 (커밋 제외)
 1. `setup-worktree.sh` 작성 → 검토
 2. `parallel-work.sh` 작성 → 검토
 3. `qa-score.sh` 작성 → 검토
-4. `merge-worktree.sh` 작성 → 검토
+4. `qa-workflow.sh` 작성 → 검토
+5. `spec-workflow.sh` 작성 → 검토
+6. `review-workflow.sh` 작성 → 검토
+7. `investigate-workflow.sh` 작성 → 검토
+8. `ship-workflow.sh` 작성 → 검토
+9. `memory-workflow.sh` 작성 → 검토
+10. `validate-ghcp.sh` 작성 → 검토
+11. `merge-worktree.sh` 작성 → 검토
 
 ### Phase 5: 통합 테스트 (1주)
 1. 실제 워크플로우 시뮬레이션
