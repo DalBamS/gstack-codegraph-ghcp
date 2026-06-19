@@ -106,7 +106,54 @@ URL 계획 확인:
 
 - `.github/skills/spec/SKILL.md`
 
-## 5. /qa 코드 경로 실행
+## 5. Spec Workflow Gate 실행
+
+목적: GitHub 이슈 생성 전에 사양 문서의 필수 섹션, secret 패턴, 중복 검색/생성 명령 preview를 검증합니다.
+
+실행:
+
+```bash
+cat > /tmp/gstack-ghcp-spec.md <<'SPEC'
+# Email login
+
+## Summary
+사용자가 이메일과 비밀번호로 로그인할 수 있게 합니다.
+
+## Scope
+- 포함: 로그인 요청, 성공/실패 응답, 기본 오류 메시지
+- 제외: OAuth, 2FA, 비밀번호 재설정
+
+## User Stories
+- As a user, I want to log in with email, so that I can access my account.
+
+## Technical Requirements
+- 로그인 요청을 처리하는 서버 엔드포인트가 필요합니다.
+- 실패 응답은 사용자에게 안전한 메시지를 반환합니다.
+
+## Acceptance Criteria
+- Given 등록된 사용자, When 올바른 이메일과 비밀번호를 입력하면, Then 로그인에 성공합니다.
+- Given 잘못된 비밀번호, When 로그인을 시도하면, Then 오류 메시지를 표시합니다.
+SPEC
+
+./scripts/spec-workflow.sh \
+	--title "Email login" \
+	--body /tmp/gstack-ghcp-spec.md \
+	--label feature
+```
+
+기대 결과:
+
+- `CHECK OK` 출력
+- `gh issue list --search ...` preview 출력
+- `gh issue create --title ... --body-file ...` preview 출력
+- 실제 GitHub 이슈 생성 없음
+
+실패 시 확인할 파일:
+
+- `scripts/spec-workflow.sh`
+- `.github/skills/spec/SKILL.md`
+
+## 6. /qa 코드 경로 실행
 
 목적: 코드 경로 또는 repo root를 대상으로 테스트 계획과 QA 점수를 연결하는지 확인합니다.
 
@@ -129,7 +176,7 @@ URL 계획 확인:
 - `scripts/qa-score.sh`
 - `scripts/qa-workflow.sh`
 
-## 6. Playwright MCP Smoke Test
+## 7. Playwright MCP Smoke Test
 
 목적: 브라우저 검증이 bespoke browser harness가 아니라 Playwright MCP로 수행되는지 확인합니다.
 
@@ -150,7 +197,7 @@ Playwright MCP로 https://example.com 을 열고 title을 확인해줘.
 - `.vscode/mcp.json`
 - `.github/skills/qa/SKILL.md`
 
-## 7. /memory 저장, 검색, Prune Dry Run
+## 8. /memory 저장, 검색, Prune Dry Run
 
 목적: 결정, 패턴, 남은 작업을 `.github/memory/` 아래에 저장하고 정리 전 승인을 받는지 확인합니다.
 
@@ -186,7 +233,7 @@ Prune 프롬프트:
 - `.github/memory/patterns.md`
 - `.github/memory/backlog.md`
 
-## 8. /ship PR Dry Run
+## 9. /ship PR Dry Run
 
 목적: PR 머지와 이슈 종료가 사용자 승인 게이트 뒤에 있는지 확인합니다.
 
