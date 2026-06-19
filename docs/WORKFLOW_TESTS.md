@@ -398,3 +398,74 @@ Prune 프롬프트:
 실패 시 확인할 파일:
 
 - `.github/skills/ship/SKILL.md`
+
+## 16. Office Hours Workflow 실행
+
+목적: 구현 전에 제품 아이디어를 실제 사용자 고통, 좁은 wedge, 성공 신호로 재정의하는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/office-hours-workflow.sh --idea "daily briefing app" --audience "busy founders"
+./scripts/office-hours-workflow.sh --idea "daily briefing app" --report /tmp/gstack-office-hours.md
+test -s /tmp/gstack-office-hours.md
+```
+
+기대 결과:
+
+- `# Office Hours Workflow Report` 출력
+- `Six Forcing Questions`, `Premise Checks`, `Candidate Paths`, `Downstream Commands` 섹션 출력
+- `CHECK OK` 출력
+- 파일, 브랜치, GitHub issue, 브라우저 세션 생성 없음
+
+실패 시 확인할 파일:
+
+- `scripts/office-hours-workflow.sh`
+- `.github/skills/office-hours/SKILL.md`
+
+## 17. Autoplan Workflow 실행
+
+목적: gstack식 Think → Plan → Build → Review → Test → Ship → Reflect 체인을 Copilot dry-run 계획으로 생성하는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/autoplan-workflow.sh --idea "daily briefing app" --target .
+./scripts/autoplan-workflow.sh --idea "daily briefing app" --target . --report /tmp/gstack-autoplan.md
+test -s /tmp/gstack-autoplan.md
+```
+
+기대 결과:
+
+- `# Autoplan Workflow Report` 출력
+- `Repo Signals`, `Sprint Chain`, `Suggested Command Plan`, `Risk Register`, `Minimum Exit Criteria` 섹션 출력
+- `CHECK OK` 출력
+- 실제 worktree 생성, GitHub mutation, 브라우저 세션 생성 없음
+
+실패 시 확인할 파일:
+
+- `scripts/autoplan-workflow.sh`
+- `.github/skills/autoplan/SKILL.md`
+
+## 18. Review GitHub Context Preview 실행
+
+목적: `/review`가 PR/issue 문맥을 mutation 없이 preview하고 diff review와 연결하는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/review-workflow.sh --base HEAD --target HEAD --pr 123 --issue 42
+```
+
+기대 결과:
+
+- `GitHub Context` 섹션 출력
+- `gh pr view 123 ...` preview 출력
+- `gh issue view 42 ...` preview 출력
+- `--run-gh` 없이 GitHub 조회 실행 없음
+- merge, push, close 같은 mutation 없음
+
+실패 시 확인할 파일:
+
+- `scripts/review-workflow.sh`
+- `.github/skills/review/SKILL.md`

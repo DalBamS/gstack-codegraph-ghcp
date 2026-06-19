@@ -230,7 +230,7 @@ echo ""
 validate_mcp
 
 echo ""
-for skill_name in spec ship qa memory review investigate; do
+for skill_name in office-hours autoplan spec ship qa memory review investigate; do
   validate_skill "$skill_name"
 done
 

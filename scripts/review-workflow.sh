@@ -4,11 +4,13 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: review-workflow.sh [--base <ref>] [--target <ref>] [--report <path>] [--fail-on-risk]
+Usage: review-workflow.sh [--base <ref>] [--target <ref>] [--pr <number>] [--issue <number>] [--run-gh] [--report <path>] [--fail-on-risk]
 
 Examples:
   review-workflow.sh
   review-workflow.sh --base origin/main --target HEAD
+  review-workflow.sh --pr 123 --issue 42
+  review-workflow.sh --pr 123 --run-gh
   review-workflow.sh --base HEAD --target HEAD --report /tmp/review.md
 USAGE
 }
@@ -17,6 +19,9 @@ BASE_REF="${REVIEW_BASE_REF:-origin/main}"
 TARGET_REF="${REVIEW_TARGET_REF:-HEAD}"
 REPORT_PATH=""
 FAIL_ON_RISK=0
+PR_NUMBER=""
+ISSUE_NUMBER=""
+RUN_GH=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -31,6 +36,18 @@ while [ "$#" -gt 0 ]; do
     --report)
       REPORT_PATH="${2:-}"
       shift 2
+      ;;
+    --pr)
+      PR_NUMBER="${2:-}"
+      shift 2
+      ;;
+    --issue)
+      ISSUE_NUMBER="${2:-}"
+      shift 2
+      ;;
+    --run-gh)
+      RUN_GH=1
+      shift
       ;;
     --fail-on-risk)
       FAIL_ON_RISK=1
@@ -84,6 +101,41 @@ CHANGED_FILES_FILE="${TMP_DIR}/changed-files.txt"
 WHITESPACE_FILE="${TMP_DIR}/whitespace.txt"
 RISK_FILE="${TMP_DIR}/risk.txt"
 TEST_GAP_FILE="${TMP_DIR}/test-gap.txt"
+GH_CONTEXT_FILE="${TMP_DIR}/github-context.txt"
+GH_WARN_FILE="${TMP_DIR}/github-warnings.txt"
+
+if [ -n "$PR_NUMBER" ] || [ -n "$ISSUE_NUMBER" ]; then
+  {
+    if [ -n "$PR_NUMBER" ]; then
+      echo "PR metadata preview:"
+      echo "gh pr view ${PR_NUMBER} --json number,title,url,state,isDraft,baseRefName,headRefName,mergeStateStatus,reviewDecision,changedFiles,labels,statusCheckRollup"
+      if [ "$RUN_GH" = "1" ]; then
+        if command -v gh >/dev/null 2>&1; then
+          echo ""
+          echo "PR metadata result:"
+          gh pr view "$PR_NUMBER" --json number,title,url,state,isDraft,baseRefName,headRefName,mergeStateStatus,reviewDecision,changedFiles,labels,statusCheckRollup 2>>"$GH_WARN_FILE" || echo "gh pr view failed for PR ${PR_NUMBER}" >> "$GH_WARN_FILE"
+        else
+          echo "gh CLI is required for --run-gh PR metadata" >> "$GH_WARN_FILE"
+        fi
+      fi
+    fi
+
+    if [ -n "$ISSUE_NUMBER" ]; then
+      [ -n "$PR_NUMBER" ] && echo ""
+      echo "Issue metadata preview:"
+      echo "gh issue view ${ISSUE_NUMBER} --json number,title,url,state,labels,body"
+      if [ "$RUN_GH" = "1" ]; then
+        if command -v gh >/dev/null 2>&1; then
+          echo ""
+          echo "Issue metadata result:"
+          gh issue view "$ISSUE_NUMBER" --json number,title,url,state,labels,body 2>>"$GH_WARN_FILE" || echo "gh issue view failed for issue ${ISSUE_NUMBER}" >> "$GH_WARN_FILE"
+        else
+          echo "gh CLI is required for --run-gh issue metadata" >> "$GH_WARN_FILE"
+        fi
+      fi
+    fi
+  } > "$GH_CONTEXT_FILE"
+fi
 
 if printf '%s' "$DIFF_RANGE" | grep -q ' '; then
   git diff --name-only "$BASE_REF" "$TARGET_REF" > "$CHANGED_FILES_FILE" || true
@@ -138,6 +190,18 @@ emit_report() {
   echo "Target: ${TARGET_REF}"
   echo "Diff: ${DIFF_RANGE}"
   echo ""
+  echo "## GitHub Context"
+  if [ -s "$GH_CONTEXT_FILE" ]; then
+    cat "$GH_CONTEXT_FILE"
+  else
+    echo "No PR or issue metadata requested. Use --pr <number> and --issue <number> to connect review findings to GitHub context."
+  fi
+  if [ -s "$GH_WARN_FILE" ]; then
+    echo ""
+    echo "Warnings:"
+    sed 's/^/- /' "$GH_WARN_FILE"
+  fi
+  echo ""
   echo "## Changed Files"
   if [ -s "$CHANGED_FILES_FILE" ]; then
     sed 's/^/- /' "$CHANGED_FILES_FILE"
@@ -174,6 +238,7 @@ emit_report() {
   echo ""
   echo "## Review Checklist"
   echo "- Confirm behavioral intent matches the originating spec or issue."
+  echo "- If --pr or --issue was provided, compare findings against the GitHub title/body before judging completeness."
   echo "- Inspect security boundaries, especially secrets, SQL, shell, browser, and LLM trust boundaries."
   echo "- Confirm tests or explicit rationale cover changed behavior."
   echo "- Run /qa or ./scripts/qa-workflow.sh on the touched path before /ship."

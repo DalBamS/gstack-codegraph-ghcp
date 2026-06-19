@@ -27,6 +27,12 @@ jobs:
       - name: Run QA workflow smoke
         run: ./scripts/qa-workflow.sh .
 
+      - name: Run office-hours workflow smoke
+        run: ./scripts/office-hours-workflow.sh --idea "daily briefing app" --audience "busy founders"
+
+      - name: Run autoplan workflow smoke
+        run: ./scripts/autoplan-workflow.sh --idea "daily briefing app" --target .
+
       - name: Run spec workflow smoke
         run: |
           cat > /tmp/gstack-ghcp-spec.md <<'SPEC'
@@ -52,6 +58,9 @@ jobs:
 
       - name: Run review workflow smoke
         run: ./scripts/review-workflow.sh --base HEAD --target HEAD
+
+      - name: Run review GitHub context preview smoke
+        run: ./scripts/review-workflow.sh --base HEAD --target HEAD --pr 123 --issue 42
 
       - name: Run investigate workflow smoke
         run: ./scripts/investigate-workflow.sh --symptom "workflow smoke test" --target .
