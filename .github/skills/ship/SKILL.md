@@ -61,9 +61,7 @@ gh pr view <PR_NUMBER> --json body
 # Step 2: 머지 실행 (사용자 확인 필수)
 gh pr merge <PR_NUMBER> \
   --merge \
-  --delete-branch \
-  --auto \
-  --admin
+  --delete-branch
 
 # Step 3: 연결 이슈 종료 (사용자 확인 필수)
 # 이슈 번호는 PR body에서 자동 추출 (예: "Closes #42")
