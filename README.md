@@ -126,6 +126,16 @@ gh auth status
 
 이 명령은 PR 상태와 체크 확인 명령, 안전 게이트, `gh pr merge`, `gh issue close` preview를 출력합니다. 실제 merge와 issue close는 사용자 승인 후에만 실행합니다.
 
+### Memory dry-run
+
+```bash
+./scripts/memory-workflow.sh save --type pattern --title "gh approval" --note "Show gh mutation commands before running."
+./scripts/memory-workflow.sh search --query "Playwright"
+./scripts/memory-workflow.sh prune --type backlog
+```
+
+저장은 기본적으로 preview만 출력합니다. 실제 `.github/memory/` 파일을 수정하려면 사용자 승인 후 `--apply`를 붙입니다.
+
 ### Copilot 변환본 구조 검증
 
 ```bash
@@ -193,6 +203,7 @@ scripts/
 ├── setup-worktree.sh       # 단일 Git worktree 생성
 ├── parallel-work.sh        # 여러 Git worktree 생성
 ├── merge-worktree.sh       # worktree 브랜치 병합 및 정리
+├── memory-workflow.sh      # memory 저장/검색/prune dry-run
 ├── qa-score.sh             # 0-100 QA 점수 계산
 ├── qa-workflow.sh          # QA 점수와 출시 판단 리포트 생성
 ├── ship-workflow.sh        # PR merge/issue close 안전 dry-run

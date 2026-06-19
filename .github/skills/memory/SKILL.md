@@ -3,9 +3,9 @@ name: memory
 description: 세션 간 결정, 패턴, 남은 작업을 저장하고 다음 세션에서 불러오는 조직 메모리 관리
 ---
 
-# /memory 스킬: 세션 간 지식 저장소
+# /memory 스킬: 실행형 세션 간 지식 저장소
 
-**목적:** 작업 중 확정된 결정, 반복되는 패턴, 남은 작업을 `.github/memory/` 아래 마크다운 파일로 저장하고 다음 세션에서 다시 불러옵니다.
+**목적:** 작업 중 확정된 결정, 반복되는 패턴, 남은 작업을 `.github/memory/` 아래 마크다운 파일로 저장하고, 저장 전 중복 검색과 민감 정보 검사를 수행합니다.
 
 ---
 
@@ -18,6 +18,7 @@ description: 세션 간 결정, 패턴, 남은 작업을 저장하고 다음 세
 
 **출력:**
 - `.github/memory/` 마크다운 파일 업데이트
+- 저장 dry-run preview
 - 다음 세션 시작 시 읽을 요약 목록
 - 중복되거나 오래된 항목 정리 결과
 
@@ -35,6 +36,55 @@ description: 세션 간 결정, 패턴, 남은 작업을 저장하고 다음 세
 ```
 
 파일이나 폴더가 없으면 스킬 실행 시 생성합니다. 평면 `.skill.md` 파일은 만들지 않습니다.
+
+---
+
+## 실행 계약
+
+### 저장 dry-run
+
+저장 전에는 먼저 다음 명령으로 preview를 생성합니다.
+
+```bash
+./scripts/memory-workflow.sh save \
+	--type pattern \
+	--title "gh approval" \
+	--note "gh mutation commands are shown before execution."
+```
+
+이 명령은 다음을 수행합니다.
+
+- 저장 대상 파일 표시
+- 기존 `.github/memory/` 중복 검색
+- secret/token/password/API key 패턴 검사
+- 저장될 entry preview 출력
+- 기본적으로 파일을 수정하지 않음
+
+사용자가 승인한 뒤에만 `--apply`를 붙여 저장합니다.
+
+```bash
+./scripts/memory-workflow.sh save \
+	--type pattern \
+	--title "gh approval" \
+	--note "gh mutation commands are shown before execution." \
+	--apply
+```
+
+### 검색
+
+```bash
+./scripts/memory-workflow.sh search --query "Playwright"
+```
+
+`rg`가 있으면 `rg`를 사용하고, 없으면 `grep`으로 fallback합니다.
+
+### 정리 preview
+
+```bash
+./scripts/memory-workflow.sh prune --type backlog
+```
+
+정리(prune)는 후보만 보여줍니다. 삭제나 축약은 사용자 승인 후 수동으로 수행합니다.
 
 ---
 
@@ -63,6 +113,7 @@ description: 세션 간 결정, 패턴, 남은 작업을 저장하고 다음 세
 - 짧고 검색 가능한 문장으로 기록합니다.
 - 같은 뜻의 메모리가 이미 있으면 새 항목을 만들지 않고 기존 항목을 업데이트합니다.
 - 비밀값, 토큰, 개인 인증 정보는 저장하지 않습니다.
+- 기본 실행은 dry-run이며, 사용자 승인 후에만 `--apply`로 실제 저장합니다.
 
 ---
 
@@ -80,7 +131,7 @@ description: 세션 간 결정, 패턴, 남은 작업을 저장하고 다음 세
 ### 검색 예시
 
 ```bash
-rg "Playwright|브라우저|MCP" .github/memory
+./scripts/memory-workflow.sh search --query "Playwright"
 ```
 
 검색 결과가 많으면 최신 항목과 직접 관련된 항목을 우선합니다.
@@ -103,6 +154,12 @@ rg "Playwright|브라우저|MCP" .github/memory
 1. 삭제 후보를 먼저 목록으로 보여줍니다.
 2. 사용자의 확인을 받은 뒤 삭제하거나 축약합니다.
 3. 삭제 대신 보존 가치가 있으면 `decisions.md` 또는 `patterns.md`로 옮깁니다.
+
+실행 예시:
+
+```bash
+./scripts/memory-workflow.sh prune --type backlog
+```
 
 ---
 
@@ -135,6 +192,15 @@ rg "Playwright|브라우저|MCP" .github/memory
 
 저장 위치: `.github/memory/patterns.md`
 
+실행 preview:
+
+```bash
+./scripts/memory-workflow.sh save \
+	--type pattern \
+	--title "gh CLI approval" \
+	--note "gh CLI 명령은 실행 전에 사용자 확인을 받는다"
+```
+
 ### 남은 작업 저장
 
 ```text
@@ -163,6 +229,7 @@ rg "Playwright|브라우저|MCP" .github/memory
 - 저장 전 기존 메모리를 확인해서 중복을 피합니다.
 - 정리(prune)는 사용자 확인 후 수행합니다.
 - 민감 정보는 절대 저장하지 않습니다.
+- `memory-workflow.sh save`는 기본 dry-run이며 승인 후 `--apply`로만 파일을 수정합니다.
 - 메모리는 긴 문서가 아니라 다음 세션에서 바로 쓸 수 있는 압축된 작업 지식이어야 합니다.
 
 ---

@@ -233,7 +233,35 @@ Prune 프롬프트:
 - `.github/memory/patterns.md`
 - `.github/memory/backlog.md`
 
-## 9. Ship Workflow Dry Run 실행
+## 9. Memory Workflow Dry Run 실행
+
+목적: 저장 전 중복 검색과 secret 검사를 수행하고, 승인 전에는 파일을 수정하지 않는지 확인합니다.
+
+실행:
+
+```bash
+./scripts/memory-workflow.sh save \
+	--type pattern \
+	--title "gh approval" \
+	--note "Show gh mutation commands before running."
+
+./scripts/memory-workflow.sh search --query "gh approval"
+./scripts/memory-workflow.sh prune --type backlog
+```
+
+기대 결과:
+
+- save는 `CHECK OK`와 entry preview를 출력
+- `--apply`가 없으면 `.github/memory/` 파일을 수정하지 않음
+- search는 `rg` 또는 `grep` fallback으로 검색
+- prune은 후보만 보여주고 파일을 수정하지 않음
+
+실패 시 확인할 파일:
+
+- `scripts/memory-workflow.sh`
+- `.github/skills/memory/SKILL.md`
+
+## 10. Ship Workflow Dry Run 실행
 
 목적: 실제 merge 없이 PR 상태 확인 명령, 안전 게이트, merge/issue close preview를 출력하는지 확인합니다.
 
@@ -257,7 +285,7 @@ Prune 프롬프트:
 - `scripts/ship-workflow.sh`
 - `.github/skills/ship/SKILL.md`
 
-## 10. /ship PR Dry Run
+## 11. /ship PR Dry Run
 
 목적: PR 머지와 이슈 종료가 사용자 승인 게이트 뒤에 있는지 확인합니다.
 
