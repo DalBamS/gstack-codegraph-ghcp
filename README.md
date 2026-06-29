@@ -295,12 +295,24 @@ codegraph callers login  # 누가 login을 호출하나
 
 UI가 있는 경우 Playwright MCP로 검증합니다. login-app에는 데모용 로그인 페이지가 포함되어 있습니다.
 
+Playwright MCP가 Chrome 런타임을 찾지 못하는 환경에서는 아래 명령을 한 번 실행해 브라우저를 설치합니다.
+
+```bash
+npx playwright install chrome
+```
+
 ```bash
 cd examples/login-app && node serve.js   # http://localhost:4173
 bash scripts/qa-workflow.sh http://localhost:4173
 ```
 
 URL을 주면 Playwright MCP가 실행할 브라우저 검증 계획(title, visible state, accessibility, screenshot)을 출력합니다. 상세 시나리오는 `examples/login-app/BROWSER_DEMO.md`를 따르세요.
+
+검증 시 기대 결과:
+
+- `password=pw` 제출 시 `ok`
+- `password=bad` 제출 시 `denied`
+- 실패 누적 6회 이상 시 `locked`
 
 ### 6. 워크플로우 스크립트 dry-run
 
