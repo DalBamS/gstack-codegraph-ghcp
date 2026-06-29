@@ -56,7 +56,7 @@ gh auth status
 
 ### 4. CodeGraph MCP 설정
 
-구조적 코드 탐색은 `.vscode/mcp.json`에 등록된 CodeGraph MCP 서버를 사용합니다. CodeGraph CLI는 전역으로 설치한 뒤 프로젝트 루트에서 `codegraph init -i`로 인덱스를 만듭니다.
+구조적 코드 탐색은 `.vscode/mcp.json`에 등록된 CodeGraph MCP 서버를 사용합니다. CodeGraph CLI는 전역으로 설치한 뒤 프로젝트 루트에서 `codegraph init`으로 인덱스를 만듭니다.
 
 ```json
 {

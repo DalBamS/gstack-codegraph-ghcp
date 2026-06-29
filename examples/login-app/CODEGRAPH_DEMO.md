@@ -7,21 +7,23 @@
 ```bash
 npm i -g @colbymchenry/codegraph
 cd examples/login-app
-codegraph init .        # 8 nodes, 10 edges 인덱싱 (.codegraph/, 커밋 안 함)
+codegraph init           # 심볼·관계가 인덱싱됨 (실제 수치는 실행 시 확인, .codegraph/, 커밋 안 함)
 ```
 
 ## 2. 조회 (codegraph_* tool과 동일 출력)
 
 ```bash
-codegraph status .            # 인덱스 통계 + 최신 여부
-codegraph query login         # 심볼 검색
+codegraph status              # 인덱스 통계 + 최신 여부
+codegraph explore "login"     # 심볼/텍스트 검색
 codegraph callers login       # 누가 login을 호출하나
 codegraph callees authenticate # authenticate가 부르는 것
 codegraph impact login        # login 변경 영향 범위
 codegraph explore "login flow" # 진입점 탐색 + 소스 일괄
 ```
 
-## 3. 실제 출력 예시
+## 3. 예상 출력 형태 (CodeGraph 버전에 따라 수치·서식이 달라질 수 있음)
+
+아래는 예상 형태이며 실제 실행 결과로 확인하세요.
 
 ```text
 $ codegraph callers login
