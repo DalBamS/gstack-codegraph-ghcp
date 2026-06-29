@@ -249,6 +249,8 @@ BASE_BRANCH=develop ./scripts/merge-worktree.sh feature-auth
 
 저장소를 처음 받았다면 다음 순서로 동작을 직접 검증할 수 있습니다. `examples/login-app/`에 스킬과 스크립트를 실제로 돌려볼 수 있는 최소 샘플(이메일 로그인 + rate limit)이 들어 있습니다.
 
+빠르게 시연하려면 통합 문서 `docs/DEMO_GUIDE.md`를 먼저 따라가세요.
+
 ### 1. 구조 검증 (CI와 동일)
 
 ```bash
