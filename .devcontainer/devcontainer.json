@@ -1,0 +1,17 @@
+{
+  "name": "gstack-codegraph-ghcp",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "npm i -g @colbymchenry/codegraph @playwright/mcp && chmod +x scripts/*.sh && bash scripts/validate-ghcp.sh",
+  "forwardPorts": [4173],
+  "portsAttributes": {
+    "4173": { "label": "login-app demo", "onAutoForward": "openBrowser" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["GitHub.copilot", "GitHub.copilot-chat"]
+    }
+  }
+}
