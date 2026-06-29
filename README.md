@@ -95,7 +95,7 @@ gh auth status
 ./scripts/qa-score.sh src/auth
 ```
 
-출력은 PLAN.md와 같은 0-100 스케일을 사용합니다.
+출력은 PLAN.md와 같은 0-100 스케일을 사용하며, target을 `docs`, `code`, `hybrid` profile로 구분합니다. 문서형 repo는 소스 파일이 없다는 이유로 code 점수를 받지 않고 문서 구조, 예제, 링크, 최신성, workflow coverage로 평가합니다.
 
 - 90-100: 우수, 출시 가능
 - 80-89: 양호, 경고 조건 있음
@@ -103,7 +103,7 @@ gh auth status
 - 60-69: 부족, 리뷰 필요
 - 0-59: 불충분, 재작업
 
-테스트, 린트, 빌드 도구가 아직 없어도 스크립트는 실패하지 않고 가능한 신호로 점수와 개선 항목을 출력합니다.
+테스트, 린트, 빌드 도구가 아직 없어도 스크립트는 실패하지 않고 profile에 맞는 가능한 신호로 점수와 개선 항목을 출력합니다.
 
 ### QA 워크플로우 리포트
 
@@ -131,7 +131,7 @@ gh auth status
 ./scripts/autoplan-workflow.sh --idea "dashboard performance" --target src/dashboard --mode thorough
 ```
 
-이 명령은 Think → Plan → Build → Review → Test → Ship → Reflect 순서의 실행 계획, risk register, 최소 완료 기준을 출력합니다. 실제 worktree 생성이나 GitHub mutation은 실행하지 않습니다.
+이 명령은 Think → Plan → Build → Review → Test → Ship → Reflect 순서의 실행 계획, CEO/Design/Engineering/DevEx 관점의 review gate, QA profile gate, risk register, 최소 완료 기준을 출력합니다. 실제 worktree 생성이나 GitHub mutation은 실행하지 않습니다.
 
 ### Spec 품질 게이트
 
@@ -177,7 +177,7 @@ gh auth status
 ./scripts/memory-workflow.sh prune --type backlog
 ```
 
-저장은 기본적으로 preview만 출력합니다. 실제 `.github/memory/` 파일을 수정하려면 사용자 승인 후 `--apply`를 붙입니다.
+저장은 기본적으로 preview만 출력합니다. 실제 `.github/memory/` 파일을 수정하려면 사용자 승인 후 `--apply`를 붙입니다. 기본 seed 파일은 `patterns.md`, `decisions.md`, `backlog.md`입니다.
 
 ### Copilot 변환본 구조 검증
 

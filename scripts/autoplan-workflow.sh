@@ -100,6 +100,25 @@ emit_report() {
   fi
 }
 
+count_target_files() {
+  find "$TARGET" -type f "$@" -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' '
+}
+
+detect_target_profile() {
+  code_files=$(count_target_files \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' -o -name '*.mjs' -o -name '*.cjs' \))
+  docs_files=$(count_target_files \( -name '*.md' -o -name '*.mdx' \))
+
+  if [ "$code_files" -eq 0 ] && [ "$docs_files" -gt 0 ]; then
+    echo "docs"
+  elif [ "$code_files" -gt 0 ] && [ "$docs_files" -gt 0 ]; then
+    echo "hybrid"
+  elif [ "$code_files" -gt 0 ]; then
+    echo "code"
+  else
+    echo "unknown"
+  fi
+}
+
 IDEA_SLUG="$(slugify "$IDEA")"
 if [ -z "$IDEA_SLUG" ]; then
   IDEA_SLUG="feature"
@@ -109,6 +128,7 @@ BRANCH="$(git branch --show-current 2>/dev/null || echo unknown)"
 DIRTY_COUNT="$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
 SPEC_PATH="docs/${IDEA_SLUG}-spec.md"
 WORKTREE_NAME="feature-${IDEA_SLUG}"
+TARGET_PROFILE="$(detect_target_profile)"
 
 HAS_TESTS="no"
 if find . -path ./.git -prune -o -type f \( -name '*test.*' -o -name '*spec.*' \) -print -quit | grep -q .; then
@@ -138,6 +158,7 @@ fi
   echo "- package.json: ${HAS_PACKAGE}"
   echo "- tests/spec files: ${HAS_TESTS}"
   echo "- GitHub Actions workflows: ${HAS_CI}"
+  echo "- target profile: ${TARGET_PROFILE}"
   echo ""
   echo "## Sprint Chain"
   echo "1. Think: run office-hours to challenge the framing before writing code."
@@ -147,6 +168,21 @@ fi
   echo "5. Test: run QA score and Playwright MCP smoke for browser-facing changes."
   echo "6. Ship: preview merge and issue-close commands, then ask for approval."
   echo "7. Reflect: save durable decisions and pitfalls to memory."
+  echo ""
+  echo "## Review Gate"
+  echo "- CEO review: confirm the user, wedge, non-goals, and success signal still match the idea."
+  echo "- Design review: confirm the proposed flow, API, or document structure is coherent."
+  echo "- Engineering review: inspect changed files, compatibility/API surface, failure modes, and rollback path."
+  echo "- DevEx review: confirm setup, commands, docs, and examples are easy to run."
+  echo "- Security review: check secret exposure, shell command safety, and GitHub mutation previews."
+  echo "- Evidence: review-workflow output, changed-file inventory, and unresolved risk list."
+  echo ""
+  echo "## QA Gate"
+  echo "- Profile: ${TARGET_PROFILE}"
+  echo "- Score command: ./scripts/qa-score.sh $(shell_quote "$TARGET")"
+  echo "- Docs targets: require documentation structure, examples, links, freshness, and workflow coverage."
+  echo "- Code targets: require tests or coverage signal, lint/build signal, complexity, type safety, and docs."
+  echo "- Browser-facing targets: add Playwright MCP smoke validation instead of a bespoke harness."
   echo ""
   echo "## Suggested Command Plan"
   echo '```bash'
@@ -165,6 +201,13 @@ fi
   echo "- Test risk: if source changes ship without tests/spec updates, review must record the rationale."
   echo "- Release risk: PR merge and issue close stay preview-only until user approval."
   echo "- Browser risk: use Playwright MCP for UI validation; do not add a bespoke browser harness."
+  if [ "$MODE" = "quick" ]; then
+    echo "- Mode risk: quick mode should only be used for low-risk tracer bullets."
+  elif [ "$MODE" = "standard" ]; then
+    echo "- Standard mode: include review and QA owners before implementation starts."
+  elif [ "$MODE" = "thorough" ]; then
+    echo "- Thorough mode: include explicit docs, memory, rollback, and post-ship follow-up owners."
+  fi
   echo ""
   echo "## Minimum Exit Criteria"
   echo "- Spec passes spec-workflow."
