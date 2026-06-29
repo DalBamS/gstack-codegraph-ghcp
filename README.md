@@ -243,6 +243,54 @@ BASE_BRANCH=develop ./scripts/merge-worktree.sh feature-auth
 
 `worktrees/` 폴더는 로컬 작업 공간이므로 `.gitignore`에 등록되어 커밋되지 않습니다.
 
+## 테스트 및 예제로 결과 확인하기
+
+저장소를 처음 받았다면 다음 순서로 동작을 직접 검증할 수 있습니다. `examples/login-app/`에 스킬과 스크립트를 실제로 돌려볼 수 있는 최소 샘플(이메일 로그인 + rate limit)이 들어 있습니다.
+
+### 1. 구조 검증 (CI와 동일)
+
+```bash
+bash scripts/validate-ghcp.sh
+```
+
+agents/skills frontmatter, MCP 설정, 스크립트 실행 권한, ignore 규칙을 확인하고 성공 시 `CHECK OK`를 출력합니다. 모든 셸 스크립트의 문법은 다음으로 한 번에 확인합니다.
+
+```bash
+bash -n scripts/*.sh
+```
+
+### 2. 예제 단위 테스트 실행
+
+```bash
+node examples/login-app/auth.test.js
+node examples/login-app/service.test.js
+```
+
+각각 `auth tests passed`, `service tests passed`가 출력되면 정상입니다. 빌드 도구나 의존성 설치 없이 Node.js만 있으면 동작합니다.
+
+### 3. 예제로 QA 점수 확인
+
+```bash
+bash scripts/qa-score.sh examples/login-app
+bash scripts/qa-workflow.sh examples/login-app
+```
+
+`qa-score.sh`는 hybrid profile로 0-100 점수와 개선 항목을 출력하고, `qa-workflow.sh`는 점수에 테스트 계획과 출시 판단을 더한 리포트를 출력합니다.
+
+### 4. 예제로 CodeGraph 결과 확인
+
+심볼·호출관계·영향범위 탐색을 실제로 보려면 `examples/login-app/CODEGRAPH_DEMO.md`의 단계를 따라 합니다. 호출 그래프(`authenticate → login → rateLimit`)와 `impact`/`callers`/`callees` 출력 예시까지 확인할 수 있습니다.
+
+### 5. 워크플로우 스크립트 dry-run
+
+```bash
+bash scripts/office-hours-workflow.sh --idea "email login"
+bash scripts/autoplan-workflow.sh --idea "email login" --target examples/login-app
+bash scripts/review-workflow.sh --base HEAD --target HEAD
+```
+
+이 스크립트들은 파일, 브랜치, GitHub 변경, 브라우저 세션을 만들지 않고 계획·리포트만 출력하므로 안전하게 결과물을 미리 볼 수 있습니다.
+
 ## 초급자용 빠른 시작
 
 1. 저장소를 열고 `docs/PLAN.md`를 먼저 읽습니다.
