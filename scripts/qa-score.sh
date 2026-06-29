@@ -6,8 +6,9 @@ TARGET_PATH="${1:-.}"
 MAX_SCORE=100
 TOTAL_SCORE=0
 IMPROVEMENTS_FILE="$(mktemp 2>/dev/null || echo /tmp/qa-score-improvements.$$)"
-# Canonical stale markers from the original PLAN footer. Keep this narrow so
-# historical implementation steps and normal backlog/TODO language are not penalized.
+# Canonical stale markers from the original PLAN footer:
+# "계획 수립 중" means "planning in progress" and "다음 검토: CEO" means "next review: CEO".
+# Keep this narrow so historical implementation steps and normal backlog/TODO language are not penalized.
 DOCS_STALE_MARKER_PATTERN='계획 수립 중|다음 검토: CEO'
 DOCS_WORKFLOW_SIGNAL_PATTERN='scripts/|\.github/skills|Playwright MCP|(^|[^[:alnum:]_])QA([^[:alnum:]_]|$)|memory|worktree|검증|workflow'
 
@@ -288,6 +289,10 @@ score_docs_freshness() {
   if [ "$stale_markers" -eq 0 ]; then
     echo 20
     echo "Docs Freshness: no stale planning markers detected (20/20)"
+  elif [ "$stale_markers" -eq 1 ]; then
+    echo 14
+    echo "Docs Freshness: stale planning marker detected (${stale_markers}, 14/20)"
+    add_improvement "Update stale planning markers before treating docs as current."
   else
     echo 8
     echo "Docs Freshness: stale planning markers detected (${stale_markers}, 8/20)"

@@ -203,6 +203,8 @@ fi
   echo "- Browser risk: use Playwright MCP for UI validation; do not add a bespoke browser harness."
   if [ "$MODE" = "quick" ]; then
     echo "- Mode risk: quick mode should only be used for low-risk tracer bullets."
+  elif [ "$MODE" = "standard" ]; then
+    echo "- Standard mode: include review and QA owners before implementation starts."
   elif [ "$MODE" = "thorough" ]; then
     echo "- Thorough mode: include explicit docs, memory, rollback, and post-ship follow-up owners."
   fi

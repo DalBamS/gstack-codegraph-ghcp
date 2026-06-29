@@ -61,6 +61,8 @@ autoplan 결과는 최소 다음 gate를 포함해야 합니다.
 - pass/fail condition: 다음 단계로 넘어가도 되는 조건과 block 조건
 - blocking risks: 사용자 결정, 보안, 테스트 공백, 문서 공백, release 위험
 
+English summary: every gate must record the responsible owner/phase, the evidence artifact, the pass/fail condition, and any blocking risks before implementation proceeds.
+
 `/review` gate는 단순 diff 확인이 아니라 다음 항목을 포함합니다.
 
 - changed-file inventory
