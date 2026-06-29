@@ -70,7 +70,9 @@ gh auth status
 }
 ```
 
-기존 `playwright` 항목은 그대로 두고 `codegraph` 항목만 추가합니다. 인덱스 디렉터리 `.codegraph/`는 로컬 산출물이므로 커밋하지 않습니다.
+기존 `playwright` 항목은 그대로 두고 `codegraph` 항목만 추가합니다. 인덱스 디렉터리 `.codegraph/`는 로컬 산출물이므로 커밋하지 않습니다. 인덱스는 파일 저장 시 자동 동기화되며, 수동 확인은 `codegraph status`로 합니다.
+
+MCP 서버로 실행하면 Copilot에는 `codegraph_explore` tool 하나만 노출됩니다. 한 번 호출하면 소스, 호출 경로, 영향 범위를 함께 반환하므로 별도 검색·호출자·callee tool을 따로 부를 필요가 없습니다. 더 세분된 조회가 필요하면 터미널에서 `codegraph callers`/`callees`/`impact`/`node` 서브커맨드를 씁니다(텍스트·심볼 검색은 `codegraph explore "<질의>"`).
 
 > WSL 사용 시 주의: 프로젝트를 `/mnt` 아래가 아닌 WSL 로컬 디스크에 두세요. `/mnt`는 WAL 미지원으로 읽기가 쓰기에 블록될 수 있습니다.
 
@@ -280,6 +282,14 @@ bash scripts/qa-workflow.sh examples/login-app
 ### 4. 예제로 CodeGraph 결과 확인
 
 심볼·호출관계·영향범위 탐색을 실제로 보려면 `examples/login-app/CODEGRAPH_DEMO.md`의 단계를 따라 합니다. 호출 그래프(`authenticate → login → rateLimit`)와 `impact`/`callers`/`callees` 출력 예시까지 확인할 수 있습니다.
+
+```bash
+npm i -g @colbymchenry/codegraph
+cd examples/login-app
+codegraph init           # .codegraph/ 인덱스 생성 (커밋 안 함)
+codegraph status         # 인덱스 통계 + 최신 여부
+codegraph callers login  # 누가 login을 호출하나
+```
 
 ### 5. 워크플로우 스크립트 dry-run
 
