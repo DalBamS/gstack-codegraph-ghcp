@@ -80,6 +80,12 @@ worktrees/                   # 로컬 전용 (커밋 제외)
 
 ---
 
+## 🔍 코드 구조 탐색 규칙 (CodeGraph MCP)
+
+심볼·호출관계·영향범위 같은 구조적 질문은 grep 반복 루프 대신 CodeGraph MCP tool로 직접 답합니다. 탐색은 `codegraph_explore`로 시작하고 `codegraph_search`, `codegraph_callers`, `codegraph_callees`, `codegraph_impact`, `codegraph_status`를 사용합니다. tool 결과는 이미 읽은 소스로 신뢰하고 grep으로 재검증하지 않으며, 코드 편집 후에는 `codegraph_status`로 staleness 배너를 확인합니다. `.codegraph/`가 없으면 `codegraph init -i`를 제안합니다.
+
+---
+
 ## 🌐 브라우저 작업 규칙
 
 ### 직접 구현하지 않기

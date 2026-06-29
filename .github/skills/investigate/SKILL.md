@@ -32,6 +32,8 @@ description: "Use when: debugging a bug, broken behavior, failing command, or ro
 
 증상과 대상 경로를 명시합니다.
 
+- 코드 탐색을 시작하기 전에 `codegraph_explore`를 먼저 호출해 관련 심볼·호출관계를 파악하고, 그 결과를 grep으로 재검증하지 않습니다.
+
 ```bash
 ./scripts/investigate-workflow.sh \
   --symptom "qa score dropped" \

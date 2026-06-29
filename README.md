@@ -54,6 +54,27 @@ gh auth status
 
 중요: 최상위 키는 반드시 `servers`입니다. `mcpServers`를 사용하면 이 프로젝트의 지침과 맞지 않습니다.
 
+### 4. CodeGraph MCP 설정
+
+구조적 코드 탐색은 `.vscode/mcp.json`에 등록된 CodeGraph MCP 서버를 사용합니다. CodeGraph CLI는 전역으로 설치한 뒤 프로젝트 루트에서 `codegraph init -i`로 인덱스를 만듭니다.
+
+```json
+{
+	"servers": {
+		"playwright": {
+			"command": "npx",
+			"args": ["@playwright/mcp@latest"]
+		},
+		"codegraph": { "command": "codegraph", "args": ["serve", "--mcp"] }
+	}
+}
+```
+
+기존 `playwright` 항목은 그대로 두고 `codegraph` 항목만 추가합니다. 인덱스 디렉터리 `.codegraph/`는 로컬 산출물이므로 커밋하지 않습니다.
+
+> WSL 사용 시 주의: 프로젝트를 `/mnt` 아래가 아닌 WSL 로컬 디스크에 두세요. `/mnt`는 WAL 미지원으로 읽기가 쓰기에 블록될 수 있습니다.
+
+
 ## 역할 에이전트
 
 역할 에이전트는 `.github/agents/`에 있습니다.
@@ -82,6 +103,7 @@ gh auth status
 | `/qa` | `.github/skills/qa/SKILL.md` | 테스트 계획, Playwright MCP 브라우저 검증, QA 점수 계산 |
 | `/review` | `.github/skills/review/SKILL.md` | diff 기반 위험 패턴, 테스트 공백, 출시 전 리뷰 |
 | `/investigate` | `.github/skills/investigate/SKILL.md` | 재현, 최소화, 가설, 계측, 회귀 검증 중심 원인 조사 |
+| `/codegraph` | `.github/skills/codegraph/SKILL.md` | CodeGraph MCP로 심볼·호출관계·영향범위를 grep 전에 직접 탐색 |
 | `/memory` | `.github/skills/memory/SKILL.md` | 결정, 패턴, 남은 작업을 `.github/memory/`에 저장하고 다음 세션에서 불러오기 |
 
 ## 스크립트 사용법
@@ -237,10 +259,10 @@ BASE_BRANCH=develop ./scripts/merge-worktree.sh feature-auth
 ```text
 .github/
 ├── agents/                 # 6개 역할 에이전트
-├── skills/                 # office-hours, autoplan, spec, qa, review, investigate, ship, memory 스킬
+├── skills/                 # office-hours, autoplan, spec, qa, review, investigate, codegraph, ship, memory 스킬
 └── copilot-instructions.md # Copilot 프로젝트 지침
 .vscode/
-└── mcp.json                # Playwright MCP 설정 (.gitignore 예외로 추적)
+└── mcp.json                # Playwright + CodeGraph MCP 설정 (.gitignore 예외로 추적)
 docs/
 └── PLAN.md                 # 구현 계획
 .gitattributes              # 셸 스크립트 LF 줄바꿈 고정

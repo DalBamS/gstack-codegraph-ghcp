@@ -22,3 +22,6 @@ yarn.lock
 dist/
 build/
 *.log
+
+# CodeGraph 인덱스 (로컬 산출물, 커밋 제외)
+.codegraph/

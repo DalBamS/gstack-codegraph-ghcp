@@ -33,6 +33,8 @@ description: "Use when: reviewing a branch, PR, diff, or work-in-progress change
 
 기본 비교는 현재 브랜치와 `origin/main`입니다.
 
+- 변경 파일을 읽기 전에 `codegraph_explore`로 영향 범위를 먼저 파악하고, 결과를 이미 읽은 소스로 취급합니다.
+
 ```bash
 ./scripts/review-workflow.sh --base origin/main --target HEAD
 ```

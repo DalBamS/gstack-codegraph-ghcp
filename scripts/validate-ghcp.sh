@@ -136,6 +136,15 @@ validate_mcp() {
         ;;
     esac
 
+    case "$compact_json" in
+      *'"codegraph"'*)
+        pass "${mcp_file} has servers.codegraph"
+        ;;
+      *)
+        fail "${mcp_file} is missing servers.codegraph"
+        ;;
+    esac
+
     return
   fi
 
@@ -189,6 +198,13 @@ if (!playwright) {
     fail(`${filePath} playwright args should be ${JSON.stringify(expectedArgs)}`);
   }
 }
+
+const codegraph = data.servers && data.servers.codegraph;
+if (!codegraph) {
+  fail(`${filePath} is missing servers.codegraph`);
+} else {
+  pass(`${filePath} has servers.codegraph`);
+}
 NODE
 
   if [ "$?" -ne 0 ]; then
@@ -230,7 +246,7 @@ echo ""
 validate_mcp
 
 echo ""
-for skill_name in office-hours autoplan spec ship qa memory review investigate; do
+for skill_name in office-hours autoplan spec ship qa memory review investigate codegraph; do
   validate_skill "$skill_name"
 done
 
@@ -255,6 +271,12 @@ if grep -Eq '^worktrees/$' .gitignore 2>/dev/null; then
   pass ".gitignore ignores worktrees/"
 else
   fail ".gitignore should include worktrees/"
+fi
+
+if grep -Eq '^\.codegraph/$' .gitignore 2>/dev/null; then
+  pass ".gitignore ignores .codegraph/"
+else
+  fail ".gitignore should include .codegraph/"
 fi
 
 echo ""
