@@ -46,12 +46,41 @@ count_files() {
     -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' '
 }
 
+count_docs_files() {
+  find "$TARGET_PATH" -type f \
+    \( -name '*.md' -o -name '*.mdx' \) \
+    -not -path '*/node_modules/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' '
+}
+
 count_matches() {
   pattern="$1"
   find "$TARGET_PATH" -type f \
     \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' -o -name '*.mjs' -o -name '*.cjs' \) \
     -not -path '*/node_modules/*' -not -path '*/.git/*' \
     -exec grep -E "$pattern" {} + 2>/dev/null | wc -l | tr -d ' '
+}
+
+count_docs_matches() {
+  pattern="$1"
+  find "$TARGET_PATH" -type f \
+    \( -name '*.md' -o -name '*.mdx' \) \
+    -not -path '*/node_modules/*' -not -path '*/.git/*' \
+    -exec grep -E "$pattern" {} + 2>/dev/null | wc -l | tr -d ' '
+}
+
+detect_profile() {
+  source_files=$(count_files)
+  docs_files=$(count_docs_files)
+
+  if [ "$source_files" -eq 0 ] && [ "$docs_files" -gt 0 ]; then
+    echo "docs"
+  elif [ "$source_files" -gt 0 ] && [ "$docs_files" -gt 0 ]; then
+    echo "hybrid"
+  elif [ "$source_files" -gt 0 ]; then
+    echo "code"
+  else
+    echo "unknown"
+  fi
 }
 
 score_coverage() {
@@ -197,6 +226,158 @@ score_performance() {
   fi
 }
 
+score_docs_structure() {
+  docs_files=$(count_docs_files)
+  headings=$(count_docs_matches '^#{1,3} ')
+
+  if [ "$docs_files" -eq 0 ]; then
+    echo 0
+    echo "Docs Structure: no markdown files detected (0/25)"
+    add_improvement "Add markdown documentation for this target."
+  elif [ "$headings" -ge "$docs_files" ]; then
+    echo 25
+    echo "Docs Structure: headings present across docs (25/25)"
+  else
+    echo 18
+    echo "Docs Structure: limited heading structure (${headings} headings, 18/25)"
+    add_improvement "Add clear headings so readers can scan the documentation."
+  fi
+}
+
+score_docs_examples() {
+  examples=$(count_docs_matches '```|^\s{0,4}(Usage:|Example:)|\./scripts/')
+
+  if [ "$examples" -ge 5 ]; then
+    echo 20
+    echo "Docs Examples: command examples and snippets present (20/20)"
+  elif [ "$examples" -gt 0 ]; then
+    echo 12
+    echo "Docs Examples: limited examples detected (12/20)"
+    add_improvement "Add more command examples or concrete workflow snippets."
+  else
+    echo 6
+    echo "Docs Examples: no examples detected (6/20)"
+    add_improvement "Add runnable examples for the documented workflows."
+  fi
+}
+
+score_docs_links() {
+  links=$(count_docs_matches '\[[^]]+\]\([^)]+\)|https?://')
+
+  if [ "$links" -ge 3 ]; then
+    echo 15
+    echo "Docs Links: references present (15/15)"
+  elif [ "$links" -gt 0 ]; then
+    echo 10
+    echo "Docs Links: limited references detected (10/15)"
+    add_improvement "Add references to related scripts, skills, or external docs."
+  else
+    echo 5
+    echo "Docs Links: no references detected (5/15)"
+    add_improvement "Add links or cross-references for follow-up reading."
+  fi
+}
+
+score_docs_freshness() {
+  stale_markers=$(count_docs_matches '계획 수립 중|다음 검토: CEO')
+
+  if [ "$stale_markers" -eq 0 ]; then
+    echo 20
+    echo "Docs Freshness: no stale planning markers detected (20/20)"
+  else
+    echo 8
+    echo "Docs Freshness: stale planning markers detected (${stale_markers}, 8/20)"
+    add_improvement "Update stale planning markers before treating docs as current."
+  fi
+}
+
+score_docs_workflow_coverage() {
+  signals=$(count_docs_matches 'scripts/|\.github/skills|Playwright MCP|QA|memory|worktree|검증|workflow')
+
+  if [ "$signals" -ge 12 ]; then
+    echo 20
+    echo "Docs Workflow Coverage: core workflows documented (20/20)"
+  elif [ "$signals" -ge 5 ]; then
+    echo 14
+    echo "Docs Workflow Coverage: partial workflow coverage (14/20)"
+    add_improvement "Document the main scripts, skills, QA, and memory workflow together."
+  else
+    echo 8
+    echo "Docs Workflow Coverage: sparse workflow coverage (8/20)"
+    add_improvement "Add workflow-level documentation for how the repository is used."
+  fi
+}
+
+score_docs_profile() {
+  structure_output=$(score_docs_structure)
+  structure_score=$(printf '%s\n' "$structure_output" | sed -n '1p')
+  structure_line=$(printf '%s\n' "$structure_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + structure_score ))
+  echo "- ${structure_line}"
+
+  examples_output=$(score_docs_examples)
+  examples_score=$(printf '%s\n' "$examples_output" | sed -n '1p')
+  examples_line=$(printf '%s\n' "$examples_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + examples_score ))
+  echo "- ${examples_line}"
+
+  links_output=$(score_docs_links)
+  links_score=$(printf '%s\n' "$links_output" | sed -n '1p')
+  links_line=$(printf '%s\n' "$links_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + links_score ))
+  echo "- ${links_line}"
+
+  freshness_output=$(score_docs_freshness)
+  freshness_score=$(printf '%s\n' "$freshness_output" | sed -n '1p')
+  freshness_line=$(printf '%s\n' "$freshness_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + freshness_score ))
+  echo "- ${freshness_line}"
+
+  workflow_output=$(score_docs_workflow_coverage)
+  workflow_score=$(printf '%s\n' "$workflow_output" | sed -n '1p')
+  workflow_line=$(printf '%s\n' "$workflow_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + workflow_score ))
+  echo "- ${workflow_line}"
+}
+
+score_code_profile() {
+  coverage_output=$(score_coverage)
+  coverage_score=$(printf '%s\n' "$coverage_output" | sed -n '1p')
+  coverage_line=$(printf '%s\n' "$coverage_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + coverage_score ))
+  echo "- ${coverage_line}"
+
+  lint_output=$(score_lint)
+  lint_score=$(printf '%s\n' "$lint_output" | sed -n '1p')
+  lint_line=$(printf '%s\n' "$lint_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + lint_score ))
+  echo "- ${lint_line}"
+
+  complexity_output=$(score_complexity)
+  complexity_score=$(printf '%s\n' "$complexity_output" | sed -n '1p')
+  complexity_line=$(printf '%s\n' "$complexity_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + complexity_score ))
+  echo "- ${complexity_line}"
+
+  type_output=$(score_type_safety)
+  type_score=$(printf '%s\n' "$type_output" | sed -n '1p')
+  type_line=$(printf '%s\n' "$type_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + type_score ))
+  echo "- ${type_line}"
+
+  docs_output=$(score_documentation)
+  docs_score=$(printf '%s\n' "$docs_output" | sed -n '1p')
+  docs_line=$(printf '%s\n' "$docs_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + docs_score ))
+  echo "- ${docs_line}"
+
+  performance_output=$(score_performance)
+  performance_score=$(printf '%s\n' "$performance_output" | sed -n '1p')
+  performance_line=$(printf '%s\n' "$performance_output" | sed -n '2p')
+  TOTAL_SCORE=$(( TOTAL_SCORE + performance_score ))
+  echo "- ${performance_line}"
+}
+
 if [ ! -e "$TARGET_PATH" ]; then
   echo "QA Score: 0/${MAX_SCORE}"
   echo "Target path not found: ${TARGET_PATH}"
@@ -207,43 +388,18 @@ fi
 
 echo "QA Score Report"
 echo "Target: ${TARGET_PATH}"
+PROFILE="$(detect_profile)"
+echo "Profile: ${PROFILE}"
 echo ""
 
-coverage_output=$(score_coverage)
-coverage_score=$(printf '%s\n' "$coverage_output" | sed -n '1p')
-coverage_line=$(printf '%s\n' "$coverage_output" | sed -n '2p')
-TOTAL_SCORE=$(( TOTAL_SCORE + coverage_score ))
-echo "- ${coverage_line}"
-
-lint_output=$(score_lint)
-lint_score=$(printf '%s\n' "$lint_output" | sed -n '1p')
-lint_line=$(printf '%s\n' "$lint_output" | sed -n '2p')
-TOTAL_SCORE=$(( TOTAL_SCORE + lint_score ))
-echo "- ${lint_line}"
-
-complexity_output=$(score_complexity)
-complexity_score=$(printf '%s\n' "$complexity_output" | sed -n '1p')
-complexity_line=$(printf '%s\n' "$complexity_output" | sed -n '2p')
-TOTAL_SCORE=$(( TOTAL_SCORE + complexity_score ))
-echo "- ${complexity_line}"
-
-type_output=$(score_type_safety)
-type_score=$(printf '%s\n' "$type_output" | sed -n '1p')
-type_line=$(printf '%s\n' "$type_output" | sed -n '2p')
-TOTAL_SCORE=$(( TOTAL_SCORE + type_score ))
-echo "- ${type_line}"
-
-docs_output=$(score_documentation)
-docs_score=$(printf '%s\n' "$docs_output" | sed -n '1p')
-docs_line=$(printf '%s\n' "$docs_output" | sed -n '2p')
-TOTAL_SCORE=$(( TOTAL_SCORE + docs_score ))
-echo "- ${docs_line}"
-
-performance_output=$(score_performance)
-performance_score=$(printf '%s\n' "$performance_output" | sed -n '1p')
-performance_line=$(printf '%s\n' "$performance_output" | sed -n '2p')
-TOTAL_SCORE=$(( TOTAL_SCORE + performance_score ))
-echo "- ${performance_line}"
+if [ "$PROFILE" = "docs" ]; then
+  score_docs_profile
+else
+  score_code_profile
+  if [ "$PROFILE" = "hybrid" ]; then
+    add_improvement "Hybrid target detected; review both code checks and documentation freshness."
+  fi
+fi
 
 if [ "$TOTAL_SCORE" -gt "$MAX_SCORE" ]; then
   TOTAL_SCORE=$MAX_SCORE
