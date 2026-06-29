@@ -100,9 +100,13 @@ REPORT
   *)
     QA_OUTPUT="$(./scripts/qa-score.sh "$TARGET")"
     QA_SCORE="$(printf '%s\n' "$QA_OUTPUT" | sed -n 's/^QA Score: \([0-9][0-9]*\)\/100$/\1/p' | tail -n 1)"
+    QA_PROFILE="$(printf '%s\n' "$QA_OUTPUT" | sed -n 's/^Profile: \(.*\)$/\1/p' | tail -n 1)"
 
     if [ -z "$QA_SCORE" ]; then
       QA_SCORE=0
+    fi
+    if [ -z "$QA_PROFILE" ]; then
+      QA_PROFILE="unknown"
     fi
 
     RELEASE_DECISION="$(rating_to_decision "$QA_SCORE")"
@@ -111,13 +115,14 @@ REPORT
 # QA Workflow Report
 
 Target: ${TARGET}
-Mode: code-path
+Mode: path
+Profile: ${QA_PROFILE}
 
 ## Test Plan
 
-- Unit: verify core logic and edge cases for changed code.
-- Integration: verify file, API, or data-flow boundaries touched by the target.
-- Regression: rerun checks related to previous failures when known.
+- Docs profile: verify structure, examples, links, freshness, and workflow coverage.
+- Code profile: verify core logic, edge cases, integration boundaries, and regression checks.
+- Hybrid profile: run both docs freshness checks and code-path checks.
 - Browser: use Playwright MCP only when the target includes a UI or user flow.
 
 ## QA Score Output
