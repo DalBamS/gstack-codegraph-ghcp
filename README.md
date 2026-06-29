@@ -240,9 +240,10 @@ BASE_BRANCH=develop ./scripts/merge-worktree.sh feature-auth
 ├── skills/                 # office-hours, autoplan, spec, qa, review, investigate, ship, memory 스킬
 └── copilot-instructions.md # Copilot 프로젝트 지침
 .vscode/
-└── mcp.json                # Playwright MCP 설정
+└── mcp.json                # Playwright MCP 설정 (.gitignore 예외로 추적)
 docs/
 └── PLAN.md                 # 구현 계획
+.gitattributes              # 셸 스크립트 LF 줄바꿈 고정
 scripts/
 ├── setup-worktree.sh       # 단일 Git worktree 생성
 ├── parallel-work.sh        # 여러 Git worktree 생성
@@ -268,6 +269,8 @@ scripts/
 - 스킬은 반드시 폴더+`SKILL.md` 구조로 유지합니다.
 - 에이전트와 스킬 frontmatter는 간단하고 명확하게 유지합니다.
 - 자동화 스크립트는 순수 Git과 셸 스크립트만 사용합니다.
+- 셸 스크립트는 `.gitattributes`로 LF 줄바꿈을 고정해 Windows 체크아웃에서도 CI/로컬 실행이 동일합니다.
+- `.vscode/`는 무시하되 `.vscode/mcp.json`만 예외로 추적해 Playwright MCP 설정을 함께 배포합니다.
 
 ## CI 검증
 
