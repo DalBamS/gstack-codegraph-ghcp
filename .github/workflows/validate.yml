@@ -18,6 +18,9 @@ jobs:
       - name: Ensure scripts are executable
         run: chmod +x scripts/*.sh
 
+      - name: Check shell script syntax
+        run: bash -n scripts/*.sh
+
       - name: Validate Copilot conversion structure
         run: ./scripts/validate-ghcp.sh
 
