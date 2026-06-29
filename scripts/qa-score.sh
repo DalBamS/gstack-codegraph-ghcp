@@ -6,6 +6,10 @@ TARGET_PATH="${1:-.}"
 MAX_SCORE=100
 TOTAL_SCORE=0
 IMPROVEMENTS_FILE="$(mktemp 2>/dev/null || echo /tmp/qa-score-improvements.$$)"
+# Canonical stale markers from the original PLAN footer. Keep this narrow so
+# historical implementation steps and normal backlog/TODO language are not penalized.
+DOCS_STALE_MARKER_PATTERN='계획 수립 중|다음 검토: CEO'
+DOCS_WORKFLOW_SIGNAL_PATTERN='scripts/|\.github/skills|Playwright MCP|(^|[^[:alnum:]_])QA([^[:alnum:]_]|$)|memory|worktree|검증|workflow'
 
 cleanup() {
   rm -f "$IMPROVEMENTS_FILE"
@@ -279,7 +283,7 @@ score_docs_links() {
 }
 
 score_docs_freshness() {
-  stale_markers=$(count_docs_matches '계획 수립 중|다음 검토: CEO')
+  stale_markers=$(count_docs_matches "$DOCS_STALE_MARKER_PATTERN")
 
   if [ "$stale_markers" -eq 0 ]; then
     echo 20
@@ -292,7 +296,7 @@ score_docs_freshness() {
 }
 
 score_docs_workflow_coverage() {
-  signals=$(count_docs_matches 'scripts/|\.github/skills|Playwright MCP|QA|memory|worktree|검증|workflow')
+  signals=$(count_docs_matches "$DOCS_WORKFLOW_SIGNAL_PATTERN")
 
   if [ "$signals" -ge 12 ]; then
     echo 20
