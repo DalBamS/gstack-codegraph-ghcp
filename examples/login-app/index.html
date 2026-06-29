@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>login-app demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 360px; margin: 60px auto; }
+    label { display: block; margin: 12px 0 4px; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { margin-top: 16px; padding: 8px 16px; }
+    #result { margin-top: 16px; font-weight: bold; }
+    .ok { color: green; }
+    .denied { color: red; }
+    .locked { color: orange; }
+  </style>
+</head>
+<body>
+  <h1>Login</h1>
+  <form id="login-form">
+    <label for="email">Email</label>
+    <input id="email" type="email" data-testid="email" value="a@b.com" />
+    <label for="password">Password</label>
+    <input id="password" type="password" data-testid="password" />
+    <button type="submit" data-testid="submit">Sign in</button>
+  </form>
+  <p id="result" data-testid="result"></p>
+
+  <script src="browser.js"></script>
+  <script>
+    const user = { email: 'a@b.com', password: 'pw' };
+    let attempts = 0;
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      attempts += 1;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const status = authenticate(user, email, password, attempts);
+      const el = document.getElementById('result');
+      el.textContent = status;
+      el.className = status;
+    });
+  </script>
+</body>
+</html>
